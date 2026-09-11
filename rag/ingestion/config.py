@@ -17,7 +17,6 @@ class IngestionSettings(BaseSettings):
         case_sensitive=False,
     )
 
-    openai_api_key: str = ""
     vlm_model: str = "gpt-4o-mini"
     vlm_max_tokens: int = 1024
     vlm_temperature: float = 0.0
