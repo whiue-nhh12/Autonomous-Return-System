@@ -14,7 +14,7 @@ from PIL import Image
 from rag.ingestion.base import BaseIngestion
 from rag.ingestion.exceptions import VlmError
 from rag.ingestion.schemas import BlockType, ContentBlock, ParsedDocument
-from rag.ingestion.vlm_adapters import VlmAdapter, VlmAdapterFactory
+from rag.ingestion.vlm.vlm_adapters import VlmAdapter, VlmAdapterFactory
 
 _ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
 load_dotenv(_ENV_PATH)

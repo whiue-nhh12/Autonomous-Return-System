@@ -18,6 +18,8 @@ class IngestionSettings(BaseSettings):
     )
 
     vlm_model: str = "gpt-4o-mini"
+    vlm_api_key: str = ""
+    vlm_base_url: str = ""
     vlm_max_tokens: int = 1024
     vlm_temperature: float = 0.0
     vlm_prompt: str = (

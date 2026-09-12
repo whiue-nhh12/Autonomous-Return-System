@@ -8,7 +8,7 @@ from rag.ingestion.base import BaseIngestion
 from rag.ingestion.parser import DoclingParser
 from rag.ingestion.schemas import ParsedDocument
 from rag.ingestion.validator import SourceValidator
-from rag.ingestion.vlm import VlmEnricher
+from rag.ingestion.vlm.vlm import VlmEnricher
 
 
 class IngestionPipeline(BaseIngestion):

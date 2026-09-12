@@ -6,7 +6,7 @@ from rag.ingestion.parser import DoclingParser
 from rag.ingestion.pipeline import IngestionPipeline
 from rag.ingestion.schemas import ContentBlock, DocumentMetadata, ParsedDocument
 from rag.ingestion.validator import SourceValidator, ValidatedSource
-from rag.ingestion.vlm import VlmEnricher
+from rag.ingestion.vlm.vlm import VlmEnricher
 
 __all__ = [
     "BaseIngestion",
