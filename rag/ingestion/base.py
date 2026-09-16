@@ -8,9 +8,9 @@ from typing import Any
 from uuid import uuid4
 
 from rag.ingestion.config import IngestionSettings, get_settings
-from rag.ingestion.exceptions import IngestionError
-from rag.ingestion.logger import IngestionLogger
-from rag.ingestion.schemas import IngestionLogRecord, ProcessName, ProcessStatus
+from rag.core.exception.ingestion_exceptions import IngestionError
+from rag.core.logger.ingestion_logger import IngestionLogger
+from rag.core.schemas.ingestion_schemas import IngestionLogRecord, ProcessName, ProcessStatus
 
 
 class BaseIngestion(ABC):

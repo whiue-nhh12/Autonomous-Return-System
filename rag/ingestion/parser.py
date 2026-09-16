@@ -6,7 +6,7 @@ from io import BytesIO
 from time import perf_counter
 from typing import Any
 
-from docling.document_converter import DocumentConverter
+from docling.document_converter import DocumentConverter,PdfFormatOption
 from docling_core.types.doc import (
     CodeItem,
     DoclingDocument,
@@ -20,9 +20,13 @@ from docling_core.types.doc import (
 )
 
 from rag.ingestion.base import BaseIngestion
-from rag.ingestion.exceptions import ParseError
-from rag.ingestion.schemas import BlockType, ContentBlock, DocumentMetadata, ParsedDocument
+from rag.core.exception.ingestion_exceptions import ParseError
+from rag.core.schemas.ingestion_schemas import BlockType, ContentBlock, DocumentMetadata, ParsedDocument
+from rag.core.utils.text_processing import normalize_text
 from rag.ingestion.validator import ValidatedSource
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+from docling.datamodel.base_models import InputFormat
+
 
 
 class DoclingParser(BaseIngestion):
@@ -30,7 +34,13 @@ class DoclingParser(BaseIngestion):
 
     def __init__(self, *args: Any, converter: DocumentConverter | None = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.converter = converter or DocumentConverter()
+        default_options = PdfPipelineOptions()
+        default_options.do_ocr = False
+        default_options.generate_picture_images = True
+        default_coverter = DocumentConverter(
+            format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=default_options)}
+        )
+        self.converter = converter or default_coverter
 
     def run(self, source: ValidatedSource) -> ParsedDocument:
         started = perf_counter()
@@ -76,6 +86,7 @@ class DoclingParser(BaseIngestion):
 
         for item, _doc_level in doc.iterate_items():
             block_type, raw_text, heading_level, image_data = self._extract_item(item, doc)
+            raw_text = normalize_text(raw_text)
             if not raw_text and not image_data:
                 continue
 

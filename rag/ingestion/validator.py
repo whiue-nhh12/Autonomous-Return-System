@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 import httpx
 
 from rag.ingestion.base import BaseIngestion
-from rag.ingestion.exceptions import ValidationError
+from rag.core.exception.ingestion_exceptions import ValidationError
 
 _URL_SCHEMES = {"http", "https"}
 _CONTENT_TYPE_TO_SUFFIX = {
