@@ -1,0 +1,2 @@
+charset-normalizer>=3.3
+ftfy>=6.2
