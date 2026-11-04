@@ -1,0 +1,48 @@
+flowchart TD
+    START[Known order data + extracted claim] --> ORDER{Exactly one order selected?}
+    ORDER -->|No, multiple and no order number| ASK_ORDER[needs_clarification<br/>ask for order number]
+    ORDER -->|No matching order in evaluator input| UNKNOWN_ORDER[manual_review<br/>ORDER_NOT_FOUND]
+    ORDER -->|Yes| ITEM{Can one order item be selected?}
+
+    ITEM -->|Ambiguous or unmatched item| ASK_ITEM[needs_clarification<br/>ask which item]
+    ITEM -->|Yes| QUANTITY{Requested quantity provided?}
+    QUANTITY -->|No| ASK_QTY[needs_clarification<br/>ask quantity]
+    QUANTITY -->|Exceeds remaining quantity| REJECT_QTY[reject<br/>QUANTITY_EXCEEDS_REMAINING]
+    QUANTITY -->|Within remaining quantity| EVIDENCE{Relevant policy evidence found?}
+
+    EVIDENCE -->|Lookup failed or no evidence| REVIEW_POLICY[manual_review<br/>policy unavailable or missing]
+    EVIDENCE -->|Evidence found| RULESET{Reviewed rule set exists<br/>and auto_decision_enabled?}
+    RULESET -->|No; this is current default| REVIEW_RULES[manual_review<br/>STRUCTURED_RULES_UNAVAILABLE]
+    RULESET -->|Yes| CHECKS[Evaluate configured checks<br/>order status, days since delivery,<br/>reason, item condition]
+    CHECKS --> ANY_FAIL{Any check failed?}
+    ANY_FAIL -->|Yes| REJECT[reject]
+    ANY_FAIL -->|No| ANY_UNKNOWN{Any check unknown?}
+    ANY_UNKNOWN -->|Yes| REVIEW[manual_review]
+    ANY_UNKNOWN -->|No| APPROVE[approve proposal]
+
+    REJECT_QTY --> RESULT
+    UNKNOWN_ORDER --> RESULT
+    REVIEW_POLICY --> RESULT
+    REVIEW_RULES --> RESULT
+    REJECT --> RESULT
+    REVIEW --> RESULT
+    APPROVE --> RESULT
+    ASK_ORDER --> RESULT
+    ASK_ITEM --> RESULT
+    ASK_QTY --> RESULT
+    RESULT --> SHARED[Manager copies result to<br/>decision_proposal + business_validation]
+    SHARED --> END[Respond to user]
+
+    DBNOTE[No database mutation here.<br/>Persistence should be a separate transactional service.]
+    DBNOTE -. future write step .-> SHARED
+
+    classDef decision fill:#eee8ff,stroke:#7656a6,color:#30214b
+    classDef reject fill:#f9dddd,stroke:#b64b4b,color:#572020
+    classDef review fill:#fff3cd,stroke:#ba8b00,color:#493600
+    classDef approve fill:#e5f4e8,stroke:#34804b,color:#183d24
+    classDef output fill:#e7f0ff,stroke:#4d75a5,color:#20334d
+    class START,ORDER,ITEM,QUANTITY,EVIDENCE,RULESET,CHECKS,ANY_FAIL,ANY_UNKNOWN decision
+    class REJECT_ITEM,REJECT_QTY,REJECT reject
+    class UNKNOWN_ORDER,REVIEW_POLICY,REVIEW_RULES,REVIEW review
+    class APPROVE approve
+    class RESULT,SHARED,END output

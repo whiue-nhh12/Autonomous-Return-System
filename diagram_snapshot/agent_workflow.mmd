@@ -1,0 +1,54 @@
+flowchart TD
+    A["Người dùng gửi request"] --> B["Validate request<br/>Schema, payload, phiên đăng nhập"]
+    B --> C{"Request hợp lệ?"}
+
+    C -- "Không" --> D["Trả lỗi validation phù hợp"]
+    C -- "Có" --> E["Classifier<br/>Phân loại intent và trích xuất thông tin"]
+
+    E --> F{"Intent"}
+    F -- "unclear / confidence thấp" --> G["Hỏi người dùng làm rõ"]
+    G --> A
+
+    F -- "policy_question" --> H["Validate input theo intent"]
+    F -- "order_status" --> H
+    F -- "return_eligibility" --> H
+    F -- "submit_return" --> H
+
+    H --> I{"Đủ thông tin bắt buộc?"}
+    I -- "Không" --> J["Yêu cầu bổ sung thông tin còn thiếu"]
+    J --> A
+    I -- "Có" --> K{"Intent"}
+
+    K -- "policy_question" --> L["Agent tra cứu tài liệu chính sách"]
+    L --> M["Trả lời kèm nguồn chính sách"]
+
+    K -- "order_status" --> N["Xác thực quyền xem đơn"]
+    N --> O["Agent tra cứu dữ liệu đơn hàng"]
+    O --> P["Trả lời thông tin đơn"]
+
+    K -- "return_eligibility" --> Q["ThreadPoolExecutor<br/>Chạy song song"]
+    K -- "submit_return" --> Q
+
+    Q --> R["Agent tra cứu dữ liệu<br/>Session DB riêng trong worker"]
+    Q --> S["Agent tra cứu tài liệu chính sách"]
+    R --> T["Chờ và tổng hợp cả hai kết quả"]
+    S --> T
+
+    T --> U{"Cả hai nhánh tra cứu thành công?"}
+    U -- "Không" --> V["Báo lỗi tra cứu hoặc thử lại<br/>Không đưa ra kết luận thiếu căn cứ"]
+    U -- "Có" --> W["Validate nghiệp vụ<br/>Quyền sở hữu đơn, trạng thái, số lượng trả"]
+
+    W --> X{"Intent"}
+    X -- "return_eligibility" --> Y["Agent quyết định / đánh giá"]
+    Y --> Z["Trả lời điều kiện và căn cứ"]
+
+    X -- "submit_return" --> AA["Agent quyết định / đề xuất"]
+    AA --> AB["Backend/service kiểm tra lại đề xuất"]
+    AB --> AC{"Được phép ghi?"}
+    AC -- "Không" --> AD["Trả lý do hoặc yêu cầu bổ sung"]
+    AC -- "Có" --> AE["Ghi ReturnRequest, ReturnItem,<br/>ReturnStatusHistory trong transaction"]
+
+    AE --> AF{"Commit thành công?"}
+    AF -- "Không" --> AG["Báo lỗi xử lý<br/>Không gửi email"]
+    AF -- "Có" --> AH["Agent gửi email thông báo"]
+    AH --> AI["Trả kết quả cho người dùng"]

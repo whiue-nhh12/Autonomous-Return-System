@@ -7,9 +7,10 @@ from rag.ingestion.pipeline import IngestionPipeline
 from rag.core.schemas.ingestion_schemas import ParsedDocument
 from rag.ingestion.validator import SourceValidator
 from rag.ingestion.vlm.vlm import VlmEnricher
+from rag.cleaning.cleaner import DocumentCleaner
 
 
-SOURCE_FILE = Path(__file__).with_name("T6S3-1-3.pdf").resolve()
+SOURCE_FILE = Path(__file__).with_name("hihi.pdf").resolve()
 
 
 class PassthroughVlm:
@@ -26,8 +27,10 @@ class TestIngestionPipeline(unittest.TestCase):
             parser=DoclingParser(),
             vlm=VlmEnricher(),
         )
+        document_cleaner = DocumentCleaner()
 
         result = pipeline.run(str(SOURCE_FILE))
+        result = document_cleaner.run(result)
 
         print("\n=== INGESTION RESULT ===")
         print("Metadata:")
@@ -38,8 +41,9 @@ class TestIngestionPipeline(unittest.TestCase):
             print(f"\nBlock {index} [{block.block_type.value}]")
             print(f"  block_id : {block.block_id}")
             print(f"  content : {block.raw_text}")
-            print(f"  page: {block.page_num}")
+            print(f"  block_level: {block.level}")
             print(f"  path: {block.hierarchical_path or 'root'}")
+            print(f"  page: {block.page_num}")
             print(f"  image_data: {block.image_data if block.image_data else 'None'}")
             """
             print(f"\nBlock {index} [{block.block_type.value}]")

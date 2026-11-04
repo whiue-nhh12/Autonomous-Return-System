@@ -1,0 +1,43 @@
+flowchart TD
+    API[Authenticated API request] --> M[ManagerAgentGraph]
+    M --> V[validate_request]
+    V --> C[classify_intent<br/>deterministic keyword routing]
+    C -->|RETURN_ELIGIBILITY| FAN[eligibility_fanout<br/>copy shared state to workers]
+
+    FAN -->|parallel| P[eligibility_policy_worker]
+    FAN -->|parallel| O[eligibility_order_worker]
+
+    subgraph POLICY[Policy worker]
+        P --> PG[PolicyAgentGraph]
+        PG --> PR[retrieve published policy passages]
+        PR --> PRES[PolicyAgentResult<br/>lookup_status + evidence + error]
+    end
+
+    subgraph ORDER[Order worker]
+        O --> OG[OrderAgentGraph<br/>read-only, scoped by authenticated user_id]
+        OG --> OQ[OrderQueryService]
+        OQ --> DB[(Database read-only transaction)]
+        DB --> ORES[OrderAgentResult<br/>normalized OrderLookupData]
+    end
+
+    PRES --> JOIN[LangGraph joins both worker results]
+    ORES --> JOIN
+    JOIN --> ADAPTER[evaluate_return adapter<br/>extract claim facts + build typed request]
+    ADAPTER --> DG[ReturnDecisionAgentGraph]
+    DG --> AG[ReturnDecisionAgent]
+    AG --> RULES[evaluate_return_request<br/>deterministic Python rules]
+    RULES --> DRES[ReturnDecisionResult<br/>outcome + checks + reason codes + citations]
+    DRES --> FINAL[finalize_response<br/>copy into business_validation<br/>and decision_proposal]
+    FINAL --> OUT[Manager response]
+
+    NOTE[No LLM call in this path as implemented.<br/>Decision is a proposal; this flow does not update ReturnRequest<br/>and does not create a refund.]
+    NOTE -.-> RULES
+
+    classDef manager fill:#e7f0ff,stroke:#4d75a5,color:#20334d
+    classDef worker fill:#eee8ff,stroke:#7656a6,color:#30214b
+    classDef storage fill:#e5f4e8,stroke:#34804b,color:#183d24
+    classDef output fill:#fff3d9,stroke:#d69b2e,color:#65460a
+    class API,M,V,C,FAN,JOIN,ADAPTER,FINAL manager
+    class P,PG,PR,PRES,O,OG,OQ,ORES,DG,AG,RULES worker
+    class DB storage
+    class DRES,OUT output

@@ -1,0 +1,179 @@
+{
+  "rule_type": {
+    "refund": [
+      "refund",
+      "hoàn tiền",
+      "hoàn lại tiền",
+      "nhận lại tiền",
+      "được hoàn tiền"
+    ],
+    "return": [
+      "return",
+      "trả hàng",
+      "trả lại hàng",
+      "hoàn trả hàng",
+      "gửi trả sản phẩm"
+    ],
+    "shipping": [
+      "shipping",
+      "vận chuyển",
+      "phí vận chuyển",
+      "phí ship",
+      "giao hàng"
+    ],
+    "exchange": [
+      "exchange",
+      "đổi hàng",
+      "đổi sản phẩm",
+      "đổi sang sản phẩm khác"
+    ],
+    "cancellation": [
+      "cancellation",
+      "hủy đơn",
+      "hủy đơn hàng",
+      "hủy đặt hàng"
+    ]
+  },
+  "return_reason": {
+    "CHANGE_OF_MIND": [
+      "đổi ý",
+      "thay đổi quyết định",
+      "không còn nhu cầu",
+      "không muốn mua nữa",
+      "không muốn nhận hàng nữa"
+    ],
+    "DEFECTIVE_PRODUCT": [
+      "sản phẩm bị lỗi",
+      "hàng bị lỗi",
+      "sản phẩm lỗi",
+      "hàng hóa bị hỏng",
+      "không hoạt động như mô tả"
+    ],
+    "WRONG_ITEM": [
+      "giao sai hàng",
+      "nhận sai sản phẩm",
+      "sản phẩm không đúng đơn",
+      "không đúng sản phẩm đã đặt"
+    ],
+    "DAMAGED_ITEM": [
+      "hàng bị hư hỏng",
+      "sản phẩm bị vỡ",
+      "sản phẩm bị móp",
+      "hư hại trong quá trình vận chuyển"
+    ],
+    "MISSING_ITEM": [
+      "thiếu hàng",
+      "thiếu sản phẩm",
+      "đơn hàng bị thiếu món",
+      "không nhận đủ sản phẩm"
+    ],
+    "NOT_RECEIVED": [
+      "chưa nhận được hàng",
+      "không nhận được hàng",
+      "đơn hàng chưa được giao"
+    ]
+  },
+  "item_condition": {
+    "UNUSED": [
+      "chưa qua sử dụng",
+      "chưa sử dụng",
+      "hàng chưa dùng",
+      "sản phẩm chưa được sử dụng"
+    ],
+    "INTACT": [
+      "hàng nguyên vẹn",
+      "sản phẩm còn nguyên vẹn",
+      "không bị hư hỏng",
+      "còn nguyên trạng"
+    ],
+    "ORIGINAL_PACKAGING": [
+      "còn nguyên bao bì",
+      "đầy đủ bao bì ban đầu",
+      "bao bì còn nguyên",
+      "nguyên hộp"
+    ],
+    "TAGS_ATTACHED": [
+      "còn nguyên tem",
+      "còn nhãn mác",
+      "tem nhãn còn nguyên",
+      "chưa tháo tag"
+    ],
+    "SEALED": [
+      "chưa mở niêm phong",
+      "còn nguyên seal",
+      "niêm phong còn nguyên",
+      "chưa bóc seal"
+    ]
+  },
+  "who_pay_ship": {
+    "customer": [
+      "khách chịu phí ship",
+      "khách hàng chịu phí vận chuyển",
+      "người mua thanh toán phí vận chuyển",
+      "phí ship do khách hàng trả",
+      "bên mua chịu phí vận chuyển",
+      "khách tự trả phí gửi hàng"
+    ],
+    "shop": [
+      "shop chịu phí ship",
+      "người bán thanh toán phí vận chuyển",
+      "phí ship do shop trả",
+      "bên bán chịu phí vận chuyển",
+      "shop thanh toán phí gửi hàng",
+      "người bán chịu phí ship"
+    ]
+  },
+  "customer_type": {
+    "buyer": [
+      "khách hàng",
+      "người mua",
+      "bên mua",
+      "buyer",
+      "customer"
+    ],
+    "seller": [
+      "người bán",
+      "nhà bán hàng",
+      "bên bán",
+      "shop",
+      "seller"
+    ]
+  },
+  "product_category": {
+    "general_merchandise": [
+      "hàng hóa thương mại điện tử",
+      "hàng hoá thương mại điện tử",
+      "hàng hóa trên sàn thương mại điện tử"
+    ],
+    "electronics": [
+      "đồ điện tử",
+      "thiết bị điện tử",
+      "hàng điện tử",
+      "điện thoại",
+      "máy tính",
+      "laptop"
+    ],
+    "clothing": [
+      "quần áo",
+      "trang phục",
+      "hàng thời trang",
+      "áo",
+      "quần",
+      "váy"
+    ],
+    "cosmetics": [
+      "mỹ phẩm",
+      "sản phẩm chăm sóc da",
+      "đồ trang điểm",
+      "skincare",
+      "makeup"
+    ],
+    "food_and_beverage": [
+      "thực phẩm",
+      "đồ ăn",
+      "thức ăn",
+      "đồ uống",
+      "thực phẩm và đồ uống"
+    ]
+  }
+}

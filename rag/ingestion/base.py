@@ -7,9 +7,9 @@ from time import perf_counter
 from typing import Any
 from uuid import uuid4
 
-from rag.ingestion.config import IngestionSettings, get_settings
+from rag.core.config import IngestionSettings, get_settings
 from rag.core.exception.ingestion_exceptions import IngestionError
-from rag.core.logger.ingestion_logger import IngestionLogger
+from rag.core.logger.rag.ingestion_logger import IngestionLogger
 from rag.core.schemas.ingestion_schemas import IngestionLogRecord, ProcessName, ProcessStatus
 
 

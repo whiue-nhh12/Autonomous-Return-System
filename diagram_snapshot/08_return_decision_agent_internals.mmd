@@ -1,0 +1,42 @@
+flowchart TD
+    IN[ReturnDecisionRequest<br/>message + claim + orders + policy evidence<br/>user_id + evaluated_at + language] --> PARSE[extract_return_claim<br/>regex-based extraction from message]
+    PARSE --> FIELDS[Claim facts<br/>order number, item query, quantity,<br/>reason code, item condition]
+    FIELDS --> GRAPH[ReturnDecisionAgentGraph<br/>single evaluate node]
+    GRAPH --> AGENT[ReturnDecisionAgent.evaluate]
+    AGENT --> HAS_EVIDENCE{policy evidence exists?}
+    HAS_EVIDENCE -->|yes| PROVIDER[ReturnPolicyRuleProvider.get_rule_set]
+    HAS_EVIDENCE -->|no| NO_RULES[rule_set = None]
+    PROVIDER --> CONFIGURED{provider returns reviewed rules?}
+    CONFIGURED -->|NoStructuredPolicyRules default| NO_RULES
+    CONFIGURED -->|configured provider| RULESET[ReturnPolicyRuleSet<br/>version + effective date + conditions<br/>auto_decision_enabled]
+    NO_RULES --> EVAL[evaluate_return_request<br/>pure deterministic evaluator]
+    RULESET --> EVAL
+
+    subgraph PRECHECK[Prechecks in evaluator]
+        EVAL --> ORDER[Select one order<br/>match claim order number<br/>or require a unique order]
+        ORDER --> ITEM[Select one item<br/>order_item_id, item query,<br/>or sole line item]
+        ITEM --> QTY[Check requested quantity<br/>against purchased quantity minus<br/>completed and active returns]
+    end
+
+    QTY --> POLICY{Policy lookup and evidence usable?}
+    POLICY -->|lookup failed / no evidence| REVIEW[manual_review]
+    POLICY -->|evidence found, no enabled rules| REVIEW
+    POLICY -->|reviewed enabled rules| DIMENSIONS[Evaluate configured dimensions<br/>order status, return window,<br/>reason, item condition]
+    DIMENSIONS --> AGGREGATE[Aggregate check statuses<br/>pass / fail / unknown]
+    AGGREGATE --> OUTCOME[Build ReturnDecisionResult<br/>outcome + checks + reason codes<br/>evidence refs + rule version]
+    REVIEW --> OUTCOME
+    QTY -. missing or ambiguous input .-> CLARIFY[needs_clarification<br/>ask for required fact]
+    ORDER -. multiple possible orders .-> CLARIFY
+    ITEM -. multiple or unknown item .-> CLARIFY
+
+    NOTE[Default provider currently returns None.<br/>Retrieved policy text is not parsed into rules automatically.]
+    NOTE -.-> NO_RULES
+
+    classDef input fill:#e7f0ff,stroke:#4d75a5,color:#20334d
+    classDef logic fill:#eee8ff,stroke:#7656a6,color:#30214b
+    classDef review fill:#fff3cd,stroke:#ba8b00,color:#493600
+    classDef result fill:#e5f4e8,stroke:#34804b,color:#183d24
+    class IN,FIELDS input
+    class PARSE,GRAPH,AGENT,HAS_EVIDENCE,PROVIDER,CONFIGURED,NO_RULES,RULESET,EVAL,ORDER,ITEM,QTY,POLICY,DIMENSIONS,AGGREGATE logic
+    class REVIEW,CLARIFY review
+    class OUTCOME result

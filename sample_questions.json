@@ -1,0 +1,213 @@
+[
+{
+"id": "Q01",
+"category": "Single-Doc Retrieval",
+"source_doc": "01_thuong_mai_dien_tu_hang_hoa.pdf",
+"question": "Tôi mua mỹ phẩm trên ShopViet và đã mở nắp dùng thử 1 lần nhưng không thích. Tôi có được yêu cầu hoàn trả trong vòng 7 ngày không?",
+"sample_answer": "Không. Theo mục 2 của CS-01, mỹ phẩm đã mở nắp hoặc qua sử dụng không được hoàn trả, trừ khi sản phẩm bị lỗi."
+},
+{
+"id": "Q02",
+"category": "Condition & Threshold Logic",
+"source_doc": "01_thuong_mai_dien_tu_hang_hoa.pdf",
+"question": "Tôi mua một đơn hàng đồ gia dụng trị giá 2.500.000 VND trên ShopViet và muốn trả hàng do bị móp vỡ. Yêu cầu chứng cứ bắt buộc là gì và thủ tục duyệt như thế nào?",
+"sample_answer": "Đối với đơn hàng trên 2.000.000 VND, chứng cứ bắt buộc phải có video mở hàng cùng ảnh/video sản phẩm và bao bì (tối thiểu 2 ảnh). Yêu cầu này sẽ được duyệt thủ công (chỉ các đơn lỗi có chứng cứ từ 2 triệu VND trở xuống mới duyệt tự động)."
+},
+{
+"id": "Q03",
+"category": "Numerical Calculation",
+"source_doc": "02_do_dien_tu_cong_nghe.pdf",
+"question": "Tôi mua một chiếc điện thoại giá 10.000.000 VND. Sau 5 ngày sử dụng, máy vẫn bình thường nhưng tôi muốn đổi ý trả lại. Tôi sẽ nhận lại được bao nhiêu tiền?",
+"sample_answer": "Theo CS-02, đổi ý trong vòng 7 ngày đối với thiết bị điện tử áp dụng phí khấu hao từ 10% đến 20% giá trị. Do đó, bạn sẽ nhận lại từ 8.000.000 VND đến 9.000.000 VND sau khi máy đạt kiểm định kỹ thuật (thời gian xử lý 7 ngày làm việc)."
+},
+{
+"id": "Q04",
+"category": "Account & Security Rules",
+"source_doc": "02_do_dien_tu_cong_nghe.pdf",
+"question": "Trước khi gửi trả lại một chiếc iPad, người mua cần hoàn tất các điều kiện kỹ thuật bắt buộc nào trên thiết bị?",
+"sample_answer": "Người mua phải: 1. Đảm bảo đầy đủ hộp, phụ kiện, phiếu bảo hành; 2. Số IMEI/Serial trùng khớp đơn hàng; 3. Đã đăng xuất tài khoản iCloud/Google/Samsung và khôi phục cài đặt gốc; 4. Không có dấu hiệu rơi vỡ, vào nước hoặc can thiệp phần cứng."
+},
+{
+"id": "Q05",
+"category": "Discount & Policy Exclusion",
+"source_doc": "03_thoi_trang.pdf",
+"question": "Tôi mua một chiếc áo sơ mi giảm giá 50% nhưng bị rộng. Tôi có được hoàn tiền không và phí vận chuyển gửi trả tính thế nào?",
+"sample_answer": "Theo CS-03, hàng khuyến mãi từ 50% trở lên chỉ được đổi size và từ chối hoàn tiền. Khi đổi size không vừa, khách hàng chịu phí gửi trả 30.000 VND."
+},
+{
+"id": "Q06",
+"category": "Time Boundary & Exclusions",
+"source_doc": "04_thuc_pham_tuoi_song.pdf",
+"question": "Tôi mua thực phẩm tươi sống giao lúc 8:00 sáng. Đến 11:00 sáng cùng ngày tôi phát hiện cá bị ôi thiu và chụp ảnh khiếu nại. Tôi có được hoàn tiền không?",
+"sample_answer": "Không. Thời hạn khiếu nại đối với hàng tươi sống theo CS-04 là trong vòng 2 giờ kể từ khi nhận hàng. Việc khiếu nại sau 3 giờ sẽ bị hệ thống từ chối tự động (hoàn 0%)."
+},
+{
+"id": "Q07",
+"category": "Abuse Prevention Rules",
+"source_doc": "04_thuc_pham_tuoi_song.pdf",
+"question": "Tài khoản của tôi đã yêu cầu hoàn tiền thành công 3 lần trong tháng này cho mặt hàng rau củ. Nếu lần thứ 4 tôi nhận rau bị dập, quy trình xử lý sẽ khác gì?",
+"sample_answer": "Theo CS-04, mỗi tài khoản được hoàn tiền tự động tối đa 3 lần/tháng. Lần thứ 4 sẽ không được hoàn tiền tự động tức thì mà chuyển sang bộ phận duyệt thủ công (thời gian xử lý 3 ngày làm việc)."
+},
+{
+"id": "Q08",
+"category": "Conditional Matrix Logic",
+"source_doc": "05_ve_may_bay.pdf",
+"question": "Khách hàng mua vé máy bay hạng Standard. Nếu hủy vé trước giờ bay 30 tiếng thì mức hoàn là bao nhiêu? Nếu hãng tự hủy chuyến thì sao?",
+"sample_answer": "Theo CS-05: Hủy trước 24-72 giờ (30 tiếng) đối với hạng Standard được hoàn 60% tiền vé. Trường hợp hãng tự hủy chuyến, khách hàng được hoàn 100% tiền vé."
+},
+{
+"id": "Q09",
+"category": "Exception Cases",
+"source_doc": "06_khach_san_dat_phong.pdf",
+"question": "Tôi đặt phòng khách sạn theo dạng 'Giá không hoàn hủy'. Tuy nhiên do có bão lớn chính phủ ra lệnh cấm du lịch, tôi có được hoàn tiền không?",
+"sample_answer": "Có. Theo CS-06, trường hợp bất khả kháng (thiên tai, dịch bệnh, lệnh cấm đi lại của cơ quan nhà nước) sẽ được hoàn 100% tiền phòng hoặc đổi ngày không mất phí, bất kể loại giá phòng."
+},
+{
+"id": "Q10",
+"category": "Multi-Doc Policy Logic",
+"source_doc": "07_thue_bao_saas.pdf",
+"question": "Tôi đăng ký gói SaaS CloudDesk theo năm. Sau 20 ngày sử dụng tôi muốn hủy gói thì chính sách hoàn tiền được tính ra sao?",
+"sample_answer": "Do đã quá 14 ngày đầu, bạn sẽ được hoàn tiền theo tỷ lệ thời gian chưa sử dụng còn lại của năm trừ đi phí xử lý 5%. Yêu cầu được duyệt thủ công trong 5 ngày làm việc."
+},
+{
+"id": "Q11",
+"category": "Condition & Progress Check",
+"source_doc": "08_khoa_hoc_truc_tuyen.pdf",
+"question": "Tôi mua khóa học video EduViet được 5 ngày và đã xem hết 25% tổng số bài giảng. Tôi có đủ điều kiện hoàn 100% học phí không?",
+"sample_answer": "Không. Mặc dù còn trong thời hạn 7 ngày, tiến độ học của bạn đã đạt 25% (ngưỡng tối đa cho phép là dưới 20%). Tỷ lệ hoàn tiền là 0% và bị từ chối tự động."
+},
+{
+"id": "Q12",
+"category": "Time & Status Logic",
+"source_doc": "09_giao_do_an.pdf",
+"question": "Đơn hàng FoodGo của tôi bị giao trễ 50 phút so với dự kiến. Tôi được bồi thường những gì và cần làm gì?",
+"sample_answer": "Bạn được hoàn 100% phí giao hàng và nhận thêm 1 voucher 20.000 VND. Bạn phải gửi khiếu nại trên ứng dụng trong vòng 60 phút kể từ lúc giao hàng thành công."
+},
+{
+"id": "Q13",
+"category": "Fraud & Security Logic",
+"source_doc": "10_vi_dien_tu_giao_dich_loi.pdf",
+"question": "Tài khoản PayViet của tôi bị phát sinh giao dịch lạ 5.000.000 VND. Tôi đã vô tình cung cấp mã OTP cho một trang web giả mạo trước đó. PayViet có hoàn tiền cho tôi không?",
+"sample_answer": "Không. Theo mục 4 của CS-10, giao dịch thất thoát do người dùng tự chia sẻ mã OTP/mật khẩu cho bên thứ ba sẽ không đủ điều kiện hoàn tiền."
+},
+{
+"id": "Q14",
+"category": "High Value Escalation Logic",
+"source_doc": "10_vi_dien_tu_giao_dich_loi.pdf",
+"question": "Giao dịch thanh toán trên PayViet bị lỗi trừ tiền nhưng đơn hàng thất bại với số tiền 25.000.000 VND. Thời gian và quy trình hoàn tiền diễn ra như thế nào?",
+"sample_answer": "Do số tiền lỗi vượt quá 20.000.000 VND, giao dịch không hoàn tự động trong 24 giờ mà bắt buộc chuyển duyệt thủ công bởi bộ phận kiểm soát. Thời gian xử lý là 5 ngày làm việc."
+},
+{
+"id": "Q15",
+"category": "Multi-Doc Comparison",
+"source_doc": "01_thuong_mai_dien_tu_hang_hoa.pdf, 03_thoi_trang.pdf, 08_khoa_hoc_truc_tuyen.pdf",
+"question": "Thời hạn tiêu chuẩn để yêu cầu đổi trả/hoàn tiền giữa các ngành hàng: Hàng hóa thông thường (ShopViet), Thời trang, và Khóa học video khác nhau như thế nào?",
+"sample_answer": "1. Hàng hóa thông thường (CS-01): 7 ngày kể từ khi nhận hàng.\n2. Thời trang & phụ kiện (CS-03): 14 ngày kể từ khi nhận hàng.\n3. Khóa học video (CS-08): 7 ngày kể từ khi đăng ký (điều kiện học dưới 20% nội dung)."
+},
+{
+"id": "Q16",
+"category": "Fee Structure Logic",
+"source_doc": "01_thuong_mai_dien_tu_hang_hoa.pdf",
+"question": "Tôi mua một sản phẩm gia dụng giá 400.000 VND trên ShopViet. Sản phẩm còn nguyên vẹn nhưng tôi muốn đổi ý trả lại. Tôi có bị trừ phí gì không và quy trình duyệt ra sao?",
+"sample_answer": "Bạn được hoàn 100% giá trị sản phẩm nhưng phải chịu phí vận chuyển gửi trả. Do giá trị đơn hàng dưới 500.000 VND, yêu cầu này sẽ được hệ thống duyệt tự động trong 5 ngày làm việc."
+},
+{
+"id": "Q17",
+"category": "Single-Doc Retrieval",
+"source_doc": "02_do_dien_tu_cong_nghe.pdf",
+"question": "Tôi mua tai nghe bluetooth bị lỗi do nhà sản xuất ở ngày thứ 12 sau khi nhận hàng. Theo quy định, tôi sẽ được xử lý đổi trả thế nào?",
+"sample_answer": "Theo CS-02, lỗi NSX từ ngày 8 đến ngày 30 sẽ được hoàn tiền 100% hoặc đổi máy mới. Quy trình xử lý là 7 ngày làm việc và được duyệt thủ công."
+},
+{
+"id": "Q18",
+"category": "Exclusions Logic",
+"source_doc": "03_thoi_trang.pdf",
+"question": "Tôi mua một bộ đồ bơi và trang sức bấm tai tại cửa hàng thời trang. Sản phẩm còn nguyên tem mác nhưng không vừa, tôi có được trả hàng hoàn tiền không?",
+"sample_answer": "Không. Theo mục 2 của CS-03, đồ lót, đồ bơi, khẩu trang và trang sức bấm tai không được hoàn trả vì lý do vệ sinh."
+},
+{
+"id": "Q19",
+"category": "Single-Doc Retrieval",
+"source_doc": "04_thuc_pham_tuoi_song.pdf",
+"question": "Khi nhận sản phẩm thực phẩm đóng gói bị rách bao bì, tôi có cần phải đóng gói trả lại sản phẩm hỏng cho đơn vị giao hàng để nhận hoàn tiền không?",
+"sample_answer": "Không. Theo mục 3 của CS-04, chính sách không yêu cầu trả lại hàng hỏng. Khách hàng chỉ cần cung cấp ảnh chụp sản phẩm lỗi kèm nhãn/hạn sử dụng để hệ thống hoàn tiền trực tiếp."
+},
+{
+"id": "Q20",
+"category": "Matrix Table Lookup",
+"source_doc": "05_ve_may_bay.pdf",
+"question": "Tôi mua vé máy bay hạng Saver (tiết kiệm) của TravelViet nhưng muốn hủy vé trước 5 ngày khởi hành. Tôi nhận lại được gì?",
+"sample_answer": "Theo CS-05, hạng Saver không được hoàn tiền vé khi khách tự hủy, bất kể hủy trước bao lâu. Bạn chỉ được hoàn lại khoản thuế và phí sân bay."
+},
+{
+"id": "Q21",
+"category": "Single-Doc Retrieval",
+"source_doc": "06_khach_san_dat_phong.pdf",
+"question": "Tôi đặt phòng khách sạn dạng 'Giá linh hoạt'. Nếu tôi hủy phòng trước giờ nhận phòng 24 tiếng (mốc chuẩn 14:00) thì sẽ bị phạt thế nào?",
+"sample_answer": "Hủy dưới 48 giờ đối với 'Giá linh hoạt' sẽ bị mất 100% tiền phòng của đêm đầu tiên (chỉ hủy trước 48 giờ mới được hoàn 100%)."
+},
+{
+"id": "Q22",
+"category": "Policy Exception",
+"source_doc": "06_khach_san_dat_phong.pdf",
+"question": "Khách sạn bị Overbooking (quá tải phòng) khiến tôi không thể nhận phòng đã đặt. StayViet xử lý bồi hoàn cho tôi như thế nào?",
+"sample_answer": "StayViet sẽ hoàn 100% tiền phòng cho bạn và đồng thời hỗ trợ tìm phòng thay thế."
+},
+{
+"id": "Q23",
+"category": "Duplicate Payment Logic",
+"source_doc": "07_thue_bao_saas.pdf",
+"question": "Tôi lỡ bấm thanh toán 2 lần cho cùng 1 tháng sử dụng phần mềm CloudDesk. Khoản thanh toán trùng có được hoàn trả không và mất bao lâu?",
+"sample_answer": "Có. Theo CS-07, giao dịch thanh toán trùng một kỳ sẽ được hoàn 100% khoản trùng bất kể thời gian. Thời gian xử lý tự động từ 1 đến 3 ngày làm việc."
+},
+{
+"id": "Q24",
+"category": "Course Live Policy",
+"source_doc": "08_khoa_hoc_truc_tuyen.pdf",
+"question": "Tôi đăng ký khóa học Zoom trực tiếp nhưng báo hủy trước ngày khai giảng 1 ngày. Mức hoàn tiền được tính thế nào?",
+"sample_answer": "Theo CS-08, hủy trong vòng 3 ngày trước khai giảng sẽ được hoàn theo số buổi chưa học nhưng trừ đi 10% phí. Thời gian duyệt thủ công trong 7 ngày làm việc."
+},
+{
+"id": "Q25",
+"category": "Order Cancellation Logic",
+"source_doc": "09_giao_do_an.pdf",
+"question": "Tôi đặt đồ ăn trên FoodGo nhưng tài xế đã đến quán và lấy hàng đi giao. Lúc này tôi bấm hủy đơn thì có được hoàn tiền không?",
+"sample_answer": "Không. Theo mục 1 của CS-09, một khi quán đã chế biến hoặc tài xế đã lấy hàng thì đơn hàng không thể hủy và không được hoàn tiền."
+},
+{
+"id": "Q26",
+"category": "Money Transfer Error",
+"source_doc": "10_vi_dien_tu_giao_dich_loi.pdf",
+"question": "Tôi dùng ví PayViet chuyển nhầm tiền cho người lạ. PayViet có tự động thu hồi và hoàn lại tiền cho tôi không?",
+"sample_answer": "Không. PayViet không hoàn tiền tự động cho giao dịch chuyển nhầm. PayViet chỉ hỗ trợ liên hệ người nhận, việc hoàn trả phụ thuộc hoàn toàn vào sự đồng ý của người nhận."
+},
+{
+"id": "Q27",
+"category": "Multi-Doc Comparison",
+"source_doc": "02_do_dien_tu_cong_nghe.pdf, 06_khach_san_dat_phong.pdf",
+"question": "So sánh cách xử lý khi khách hàng 'đổi ý/hủy phòng' giữa mua thiết bị điện tử (CS-02) và đặt phòng khách sạn giá linh hoạt (CS-06) trong khung thời gian tiêu chuẩn?",
+"sample_answer": "1. Thiết bị điện tử (CS-02): Đổi ý trong 7 ngày được trả hàng nhưng trừ phí khấu hao 10%-20%.\n2. Khách sạn giá linh hoạt (CS-06): Hủy trước 48 giờ được hoàn 100% tiền (không bị trừ phí), nếu hủy dưới 48 giờ thì mất tiền 1 đêm đầu."
+},
+{
+"id": "Q28",
+"category": "Cross-category Exclusions",
+"source_doc": "01_thuong_mai_dien_tu_hang_hoa.pdf, 02_do_dien_tu_cong_nghe.pdf, 05_ve_may_bay.pdf",
+"question": "Liệt kê các trường hợp ngoại lệ bị từ chối hoàn tiền hoàn toàn (hoàn 0%) đối với: Hàng hóa E-commerce, Thiết bị điện tử, và Vé máy bay?",
+"sample_answer": "1. E-commerce (CS-01): Sản phẩm đặt theo yêu cầu riêng, mã quà tặng, hàng thanh lý ghi 'không đổi trả'.\n2. Thiết bị điện tử (CS-02): Phần mềm, thẻ cào, key bản quyền đã kích hoạt hoặc máy bị khóa tài khoản/khóa mạng do khách.\n3. Vé máy bay (CS-05): Hủy sau giờ khởi hành (no-show) hoặc vé hạng Saver (chỉ hoàn thuế/phí)."
+},
+{
+"id": "Q29",
+"category": "Time Boundary & SLA Comparison",
+"source_doc": "04_thuc_pham_tuoi_song.pdf, 09_giao_do_an.pdf, 10_vi_dien_tu_giao_dich_loi.pdf",
+"question": "Khung thời gian tối đa để người dùng gửi khiếu nại/báo cáo lỗi đối với: Thực phẩm tươi sống, Dịch vụ giao đồ ăn, và Giao dịch gian lận ví điện tử là bao lâu?",
+"sample_answer": "1. Thực phẩm tươi sống (CS-04): Trong vòng 2 giờ kể từ khi nhận.\n2. Giao đồ ăn FoodGo (CS-09): Trong vòng 60 phút kể từ lúc giao thành công.\n3. Giao dịch gian lận PayViet (CS-10): Trong vòng 48 giờ kể từ thời điểm phát sinh giao dịch."
+},
+{
+"id": "Q30",
+"category": "Edge Case & Automated Approval",
+"source_doc": "01_thuong_mai_dien_tu_hang_hoa.pdf, 07_thue_bao_saas.pdf, 09_giao_do_an.pdf",
+"question": "Những trường hợp nào sau đây được hệ thống xử lý duyệt HOÀN TIỀN TỰ ĐỘNG mà không cần qua nhân viên duyệt thủ công?",
+"sample_answer": "Các trường hợp được duyệt tự động gồm:\n1. CS-01: Đơn hàng lỗi/giao sai có chứng cứ trị giá <= 2.000.000 VND, hoặc đơn đổi ý hàng nguyên vẹn <= 500.000 VND.\n2. CS-07: Hủy gói tháng trong 7 ngày, gói năm trong 14 ngày đầu, hoặc thanh toán trùng/gia hạn sau khi đã hủy.\n3. CS-09: Hủy đơn trước khi quán xác nhận, thiếu/sai món có ảnh chứng cứ, hoặc giao trễ > 45 phút."
+}
+]
+

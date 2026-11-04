@@ -9,7 +9,7 @@ import re
 from time import perf_counter
 from uuid import uuid4
 
-from rag.core.logger.cleaning_logger import CleaningLogger
+from rag.core.logger.rag.cleaning_logger import CleaningLogger
 from rag.core.schemas.ingestion_schemas import BlockType, ContentBlock, ParsedDocument
 from rag.core.utils.text_processing import decode_and_normalize, normalize_text
 from rag.cleaning.schemas import Cleaned_Document

@@ -1,0 +1,146 @@
+flowchart TD
+    START["Request đã qua validate request và classifier"]
+    START --> ROUTE{"Intent"}
+
+    ROUTE -- "unclear" --> UC1
+    ROUTE -- "policy_question" --> PQ1
+    ROUTE -- "order_status" --> OS1
+    ROUTE -- "return_eligibility" --> EL1
+    ROUTE -- "submit_return" --> SR1
+
+    subgraph UNCLEAR["Intent: unclear — hỏi lại người dùng"]
+        UC1["Đọc confidence và entities classifier"]
+        UC1 --> UC2["Chọn câu hỏi làm rõ cụ thể<br/>không hỏi lại thông tin đã có"]
+        UC2 --> UC3["Trả câu hỏi làm rõ"]
+        UC3 --> UC4["Nhận phản hồi người dùng"]
+        UC4 --> UC5["Ghép ngữ cảnh hội thoại và request mới"]
+        UC5 --> UC6["Chạy classifier lại"]
+        UC6 --> ROUTE
+    end
+
+    subgraph POLICY["Intent: policy_question — agent tra cứu chính sách"]
+        PQ1["Chuẩn hóa câu hỏi<br/>xác định chủ đề và điều kiện cần tìm"]
+        PQ1 --> PQ2["Tạo query tìm kiếm"]
+        PQ2 --> PQ3["Tìm trong tài liệu chính sách đã publish"]
+        PQ3 --> PQ4["Lọc theo nguồn, hiệu lực và phiên bản"]
+        PQ4 --> PQ5["Xếp hạng đoạn liên quan"]
+        PQ5 --> PQ6{"Có bằng chứng đủ liên quan?"}
+        PQ6 -- "Không" --> PQ7["Trả trạng thái không tìm thấy<br/>hoặc đề nghị chuyển nhân viên"]
+        PQ6 -- "Có" --> PQ8["Đóng gói trích đoạn, tiêu đề,<br/>URL và phiên bản nguồn"]
+        PQ8 --> PQ9["Tạo câu trả lời chỉ dựa trên evidence"]
+        PQ7 --> PQ10["Trả kết quả chính sách"]
+        PQ9 --> PQ10
+    end
+
+    subgraph ORDER_STATUS["Intent: order_status — agent tra cứu dữ liệu đơn"]
+        OS1["Validate input cho intent<br/>cần mã đơn hoặc định danh tra cứu"]
+        OS1 --> OS2{"Đủ input?"}
+        OS2 -- "Không" --> OS3["Hỏi người dùng bổ sung"]
+        OS2 -- "Có" --> OS4["Backend xác thực danh tính"]
+        OS4 --> OS5["Kiểm tra quyền truy cập đơn"]
+        OS5 --> OS6{"Được phép xem?"}
+        OS6 -- "Không" --> OS7["Từ chối an toàn<br/>không tiết lộ đơn có tồn tại hay không"]
+        OS6 -- "Có" --> OS8["Mở SQLAlchemy Session riêng"]
+        OS8 --> OS9["OrderRepository lấy đơn"]
+        OS9 --> OS10["Đọc OrderItem và Shipment<br/>chỉ đọc Payment/Return khi cần"]
+        OS10 --> OS11["Chuyển ORM thành DTO tối thiểu"]
+        OS11 --> OS12["Đóng Session"]
+        OS12 --> OS13["Tạo câu trả lời trạng thái đơn"]
+        OS7 --> OS14["Trả kết quả"]
+        OS13 --> OS14
+        OS3 --> OS14
+    end
+
+    subgraph ELIGIBILITY["Intent: return_eligibility — đánh giá điều kiện trả"]
+        EL1["Validate input<br/>mã đơn, mặt hàng nếu cần, câu hỏi"]
+        EL1 --> EL2{"Đủ input?"}
+        EL2 -- "Không" --> EL3["Hỏi bổ sung thông tin"]
+        EL2 -- "Có" --> EL4["Orchestrator khởi chạy ThreadPoolExecutor"]
+        EL4 --> EL_D1["Worker dữ liệu: mở Session riêng"]
+        EL4 --> EL_P1["Worker chính sách"]
+        EL_D1 --> EL_D2["Xác thực quyền xem đơn"]
+        EL_D2 --> EL_D3["Repository đọc Order và OrderItem"]
+        EL_D3 --> EL_D4["Đọc shipment, payment và yêu cầu trả liên quan"]
+        EL_D4 --> EL_D5["Tạo DTO tối thiểu; đóng Session"]
+        EL_P1 --> EL_P2["Tìm chính sách theo câu hỏi,<br/>sản phẩm, lý do và thời điểm"]
+        EL_P2 --> EL_P3["Lọc phiên bản, xếp hạng<br/>và trích policy evidence"]
+        EL_D5 --> EL_JOIN["Await/join hai Future"]
+        EL_P3 --> EL_JOIN
+        EL_JOIN --> EL_OK{"Hai nhánh thành công?"}
+        EL_OK -- "Không" --> EL_ERR["Retry có giới hạn hoặc báo lỗi<br/>không kết luận khi thiếu evidence"]
+        EL_OK -- "Có" --> EL5["Backend validate nghiệp vụ<br/>quyền sở hữu, trạng thái đơn,<br/>số lượng đã trả/đang trả"]
+        EL5 --> EL6{"Dữ liệu hợp lệ và đủ?"}
+        EL6 -- "Không" --> EL7["Trả yêu cầu bổ sung<br/>hoặc lỗi dữ liệu rõ ràng"]
+        EL6 -- "Có" --> EL8["Decision agent nhận dữ liệu đã chuẩn hóa<br/>và policy evidence có nguồn"]
+        EL8 --> EL9["Đánh giá điều kiện từng mặt hàng"]
+        EL9 --> EL10["Trả structured result<br/>eligible, reason, evidence refs,<br/>needs_human_review"]
+        EL10 --> EL11["Backend kiểm tra schema và căn cứ"]
+        EL11 --> EL12["Tạo câu trả lời có điều kiện<br/>nêu rõ chưa tạo yêu cầu trả"]
+        EL12 --> EL13["Trả kết quả"]
+        EL3 --> EL13
+        EL7 --> EL13
+        EL_ERR --> EL13
+    end
+
+    subgraph SUBMIT_RETURN["Intent: submit_return — tiếp nhận yêu cầu trả"]
+        SR1["Validate input<br/>mã đơn, dòng hàng, số lượng,<br/>lý do và phương thức trả"]
+        SR1 --> SR2{"Thiếu hoặc sai input?"}
+        SR2 -- "Có" --> SR3["Hỏi bổ sung/sửa thông tin"]
+        SR2 -- "Không" --> SR4["Orchestrator khởi chạy ThreadPoolExecutor"]
+        SR4 --> SR_D1["Worker dữ liệu: mở Session riêng"]
+        SR4 --> SR_P1["Worker chính sách"]
+        SR_D1 --> SR_D2["Xác thực quyền trên đơn"]
+        SR_D2 --> SR_D3["Repository đọc Order và OrderItem"]
+        SR_D3 --> SR_D4["Đọc shipment, payment và yêu cầu trả hiện có"]
+        SR_D4 --> SR_D5["Tạo DTO tối thiểu; đóng Session"]
+        SR_P1 --> SR_P2["Tìm thời hạn, điều kiện,<br/>ngoại lệ và chính sách áp dụng"]
+        SR_P2 --> SR_P3["Lọc phiên bản, xếp hạng<br/>và trích policy evidence"]
+        SR_D5 --> SR_JOIN["Await/join hai Future"]
+        SR_P3 --> SR_JOIN
+        SR_JOIN --> SR_OK{"Hai nhánh thành công?"}
+        SR_OK -- "Không" --> SR_LOOKUP_ERR["Retry có giới hạn hoặc báo lỗi<br/>không tiếp tục quyết định"]
+        SR_OK -- "Có" --> SR5["Backend validate nghiệp vụ<br/>quyền sở hữu, cửa sổ trả hàng,<br/>số lượng còn được trả, duplicate request"]
+        SR5 --> SR6{"Đủ dữ kiện để quyết định?"}
+        SR6 -- "Không" --> SR7["Hỏi bổ sung hoặc chuyển nhân viên"]
+        SR6 -- "Có" --> SR8["Decision agent nhận payload đã kiểm tra<br/>và policy evidence"]
+        SR8 --> SR9["Đề xuất approve / reject / manual_review<br/>kèm lý do và evidence refs"]
+        SR9 --> SR10["Backend kiểm tra lại đề xuất<br/>không coi output agent là quyền ghi"]
+        SR10 --> SR11{"Tự động xử lý được?"}
+        SR11 -- "Không" --> SR12["Tạo tác vụ chờ nhân viên<br/>hoặc trả kết quả từ chối"]
+        SR11 -- "Có" --> SR13["Service mở transaction"]
+        SR13 --> SR14["Tạo ReturnRequest"]
+        SR14 --> SR15["Tạo ReturnItem cho từng dòng hàng"]
+        SR15 --> SR16["Ghi ReturnStatusHistory"]
+        SR16 --> SR17{"Commit thành công?"}
+        SR17 -- "Không" --> SR18["Rollback và báo lỗi<br/>không gửi email xác nhận"]
+        SR17 -- "Có" --> SR19["Phát event sau commit"]
+        SR19 --> EMAIL1
+        SR3 --> SR20["Trả phản hồi"]
+        SR7 --> SR20
+        SR12 --> SR20
+        SR18 --> SR20
+        SR19 --> SR20
+        SR_LOOKUP_ERR --> SR20
+    end
+
+    subgraph EMAIL["Agent gửi email — chạy sau khi có event đã commit"]
+        EMAIL1["Nhận ReturnRequestCommitted event"]
+        EMAIL1 --> EMAIL2["Đọc template theo loại sự kiện"]
+        EMAIL2 --> EMAIL3["Tạo nội dung từ dữ liệu đã commit<br/>không tự quyết định trạng thái"]
+        EMAIL3 --> EMAIL4["Gửi qua email provider"]
+        EMAIL4 --> EMAIL5{"Gửi thành công?"}
+        EMAIL5 -- "Không" --> EMAIL6["Ghi lỗi và retry có giới hạn<br/>hoặc đưa vào dead-letter queue"]
+        EMAIL5 -- "Có" --> EMAIL7["Ghi nhận provider message ID<br/>và thời điểm gửi"]
+    end
+
+    classDef user fill:#fff2cc,stroke:#b8860b,color:#4d3b00
+    classDef agent fill:#e8e1ff,stroke:#6546a5,color:#26164d
+    classDef backend fill:#e2f3e8,stroke:#31814b,color:#163d23
+    classDef error fill:#ffe3e3,stroke:#c62828,color:#5c1111
+    classDef gate fill:#e8eef7,stroke:#456990,color:#1c3248
+
+    class START,UC3,UC4,UC5,UC6,OS3,OS14,EL3,EL13,SR3,SR20 user
+    class PQ1,PQ2,PQ3,PQ4,PQ5,PQ8,PQ9,EL_D1,EL_D3,EL_D4,EL_P1,EL_P2,EL_P3,EL8,EL9,EL10,SR_D1,SR_D3,SR_D4,SR_P1,SR_P2,SR_P3,SR8,SR9,EMAIL1,EMAIL2,EMAIL3,EMAIL4 agent
+    class OS4,OS5,OS8,OS9,OS10,OS11,OS12,EL4,EL_D2,EL_D5,EL_JOIN,EL5,EL11,SR4,SR_D2,SR_D5,SR_JOIN,SR5,SR10,SR13,SR14,SR15,SR16,SR19,EMAIL7 backend
+    class UC1,UC2,PQ7,OS7,EL_ERR,EL7,SR7,SR12,SR18,SR_LOOKUP_ERR,EMAIL6 error
+    class ROUTE,UC1,UC2,PQ6,OS2,OS6,EL2,EL_OK,EL6,SR2,SR_OK,SR6,SR11,SR17,EMAIL5 gate

@@ -35,7 +35,7 @@ class DoclingParser(BaseIngestion):
     def __init__(self, *args: Any, converter: DocumentConverter | None = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         default_options = PdfPipelineOptions()
-        default_options.do_ocr = False
+        default_options.do_ocr = True
         default_options.generate_picture_images = True
         default_coverter = DocumentConverter(
             format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=default_options)}
@@ -53,6 +53,7 @@ class DoclingParser(BaseIngestion):
 
             parsed = ParsedDocument(
                 metadata=DocumentMetadata(
+                    doc_id="",
                     source=source.origin,
                     page_num=page_num,
                     length_count=len(blocks),
