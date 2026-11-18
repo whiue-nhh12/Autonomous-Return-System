@@ -1,0 +1,16 @@
+flowchart TD
+    C[Manager classification] --> E{intent}
+    E -->|RETURN_ELIGIBILITY| FAN[eligibility_fanout]
+    FAN --> P[Policy lookup worker<br/>implemented]
+    FAN --> O[Eligibility order worker<br/>returns not_configured]
+    P --> V[validate_eligibility<br/>currently returns not_configured]
+    O --> V
+    V --> F[finalize_response<br/>currently says eligibility cannot be determined]
+
+    E -->|SUBMIT_RETURN| S[submit_return<br/>currently returns not_configured]
+    S --> F2[finalize_response]
+
+    classDef ready fill:#e5f4e8,stroke:#34804b,color:#183d24
+    classDef pending fill:#fff3cd,stroke:#ba8b00,color:#493600
+    class C,E,P,F,F2 ready
+    class FAN,O,V,S pending

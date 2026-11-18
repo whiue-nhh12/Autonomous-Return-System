@@ -9,9 +9,35 @@ injected, reviewed structured rule provider enables automated decisions.
 Retrieved policy passages alone result in `manual_review`. The worker creates
 a proposal in shared state and does not persist a decision or initiate a refund.
 
+## Hybrid understanding and clarification context
+
+The manager uses deterministic intent rules for clear requests. If the message
+is ambiguous, it can use an OpenAI-compatible JSON model when
+`AGENT_LLM_API_KEY` is configured. Set `AGENT_LLM_MODEL`, optional
+`AGENT_LLM_BASE_URL`, `AGENT_LLM_TIMEOUT_SECONDS` (default 8), and
+`AGENT_LLM_MIN_CONFIDENCE` (default 0.82) to configure it. Without a key, the
+manager falls back to deterministic classification and clarification. Structured
+model outputs are validated; low-confidence or invalid output does not route to
+a worker.
+
+For order and return requests, the same optional model may fill missing claim
+fields. It cannot replace fields extracted by deterministic rules, and it only
+fills a field when that field's reported confidence meets the configured
+threshold. Return eligibility still uses the reviewed structured-rule provider;
+any model-derived claim forces manual review, so model extraction cannot by itself
+approve or reject a return.
+
+When a clarification is pending, the manager retains up to eight user messages
+for 30 minutes, scoped by authenticated `user_id` and `conversation_id`. The
+default store is in memory for a single process. Hosts using multiple processes
+or requiring continuity across restarts should inject a shared implementation of
+`ConversationStore` with a distributed per-conversation turn lock. Completed
+requests clear the retained context.
+
 Clarification ends the current graph run. Send the user's next message as a new
-request. The manager generates a fresh `request_id` and can reuse the supplied
-`conversation_id`.
+request with the same `conversation_id` to continue; the manager generates a
+fresh `request_id` and uses the saved user-scoped context while clarification is
+pending.
 
 ## Authenticated API boundary
 

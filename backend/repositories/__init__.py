@@ -6,6 +6,7 @@ from backend.repositories.order import OrderItemRepository, OrderRepository
 from backend.repositories.order_read import OrderReadBundle, OrderReadPage, OrderReadRepository
 from backend.repositories.payment import PaymentRepository
 from backend.repositories.return_request import (
+    OutboxEventRepository,
     RefundRepository,
     ReturnItemRepository,
     ReturnRequestRepository,
@@ -22,6 +23,7 @@ __all__ = [
     "OrderReadBundle",
     "OrderReadPage",
     "OrderReadRepository",
+    "OutboxEventRepository",
     "PaymentRepository",
     "ProductRepository",
     "RefundRepository",

@@ -1,0 +1,72 @@
+flowchart TD
+    CLIENT["Client request<br/>message + language + conversation_id<br/>Bearer token"] --> ROUTE["FastAPI route<br/>POST /agent/requests"]
+
+    subgraph AUTH["Authentication components"]
+        DEP["get_current_user"] --> AUTH_SERVICE["AuthService"]
+        AUTH_SERVICE --> JWT["JWTTokenVerifier"]
+        AUTH_SERVICE --> USER_REPO["UserRepository"]
+        USER_REPO --> DB[("Application database")]
+        AUTH_SERVICE --> PRINCIPAL["AuthenticatedPrincipal<br/>user_id + role"]
+    end
+
+    ROUTE --> DEP
+    ROUTE --> REQUEST_SCHEMA["ManagerRequest"]
+    PRINCIPAL -->|"trusted user_id"| MANAGER["ManagerAgentGraph.invoke"]
+    REQUEST_SCHEMA -->|"message + language + conversation_id"| MANAGER
+
+    subgraph ORCH["Manager orchestration"]
+        MANAGER --> SHARED["Create AgentSharedState"]
+        SHARED --> VALIDATE["validate_request"]
+        VALIDATE --> CLASSIFY["classify_request"]
+        CLASSIFY --> ROUTER{"route_intent"}
+    end
+
+    ROUTER -->|"policy question"| POLICY_REQUEST["PolicyAgentRequest"]
+
+    subgraph POLICY["Policy child agent"]
+        POLICY_REQUEST --> POLICY_GRAPH["PolicyAgentGraph"]
+        POLICY_GRAPH --> POLICY_WORKER["PolicyAgent.retrieve"]
+        POLICY_WORKER --> LOCAL["DocumentRetrievalLocalState"]
+    end
+
+    subgraph RETRIEVAL["Retrieval components"]
+        LOCAL --> PIPELINE["RetrievalPipeline.search"]
+        PIPELINE --> PREP["Query preparation and classification"]
+        PREP --> QUERIES["Prepared search queries"]
+        PREP -. "if enabled" .-> REWRITE["QueryRewriter"]
+        REWRITE --> QUERIES
+        PREP -. "if enabled" .-> HYDE["HyDE generator"]
+        HYDE --> HYDE_ENCODER["Encode hypothetical document"]
+        HYDE_ENCODER --> VECTOR
+        QUERIES --> ENCODER["QueryEncoder"]
+        ENCODER --> HYBRID["HybridSearch"]
+        HYBRID --> KEYWORD["Elasticsearch keyword search"]
+        HYBRID --> VECTOR["VectorSearchBackend / Qdrant"]
+        KEYWORD --> FUSE["Fuse and rank results"]
+        VECTOR --> FUSE
+        FUSE --> PUBLISHED["Filter published document versions<br/>manifest + PostgresDocumentRepository"]
+        PUBLISHED -. "if enabled" .-> RERANK["Reranker"]
+    end
+
+    PUBLISHED -->|"retrieval results"| SELECT["Deduplicate, filter, select evidence"]
+    RERANK -->|"reranked results"| SELECT
+    SELECT --> POLICY_RESULT["PolicyAgentResult<br/>lookup status + evidence + message"]
+    POLICY_RESULT --> ADAPTER["Orchestration adapter<br/>ChildAgentResult"]
+    ADAPTER --> FINALIZE["finalize_response"]
+
+    ROUTER -->|"order status"| ORDER["Order worker<br/>placeholder"]
+    ROUTER -->|"return eligibility"| ELIG_FANOUT["Eligibility fan-out"]
+    ELIG_FANOUT --> ELIG_POLICY["PolicyAgentGraph<br/>policy lookup"]
+    ELIG_FANOUT --> ELIG_ORDER["Order lookup<br/>placeholder"]
+    ELIG_POLICY --> ELIG_EVAL["Eligibility evaluator<br/>placeholder"]
+    ELIG_ORDER --> ELIG_EVAL
+    ROUTER -->|"submit return"| SUBMIT["Submit-return worker<br/>placeholder"]
+    ROUTER -->|"unclear"| CLARIFY["clarify"]
+    ORDER --> FINALIZE
+    ELIG_EVAL --> FINALIZE
+    SUBMIT --> FINALIZE
+    CLARIFY --> FINALIZE
+
+    FINALIZE --> MERGE["Update AgentSharedState<br/>child results + response + transitions<br/>and policy evidence when applicable"]
+    MERGE --> RESPONSE["ManagerResponse.from_state"]
+    RESPONSE --> CLIENT

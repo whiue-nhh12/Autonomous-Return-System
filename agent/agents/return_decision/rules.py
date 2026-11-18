@@ -59,6 +59,22 @@ def evaluate_return_request(
     checks: list[DecisionCheck] = []
     refs = [_evidence_ref(item) for item in request.policy_evidence]
 
+    if request.claim.model_derived_fields:
+        english = request.language.casefold().startswith("en")
+        fields = ", ".join(sorted(request.claim.model_derived_fields))
+        checks.append(
+            _check(
+                "model_claim_review",
+                "unknown",
+                "MODEL_EXTRACTED_CLAIM_REQUIRES_REVIEW",
+                f"Thông tin được trích xuất bằng mô hình cần nhân viên rà soát: {fields}.",
+                f"These model-extracted details require manual review: {fields}.",
+                refs,
+                english=english,
+            )
+        )
+        return _result(request, "manual_review", checks, refs, rule_set)
+
     order = _select_order(request)
     if order is None:
         if len(request.orders) > 1 and request.claim.order_number is None:

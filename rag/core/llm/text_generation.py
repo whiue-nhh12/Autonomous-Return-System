@@ -18,11 +18,16 @@ class OpenAITextGenerator:
         api_key: str,
         base_url: str | None = None,
         response_format: dict | None = None,
+        max_retries: int = 2,
     ) -> None:
         from openai import OpenAI
 
         self.model = model
-        self.client = OpenAI(api_key=api_key, base_url=base_url or None)
+        self.client = OpenAI(
+            api_key=api_key,
+            base_url=base_url or None,
+            max_retries=max_retries,
+        )
         self.response_format = response_format
 
     def generate(self, prompt: str, *, max_tokens: int, timeout_seconds: float) -> str:

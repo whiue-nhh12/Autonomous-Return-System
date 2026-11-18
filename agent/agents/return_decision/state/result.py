@@ -10,6 +10,14 @@ from agent.core.state.shared import OrderLookupData, PolicyEvidence, StateModel
 
 
 CheckStatus = Literal["pass", "fail", "unknown"]
+ClaimField = Literal[
+    "order_number",
+    "item_query",
+    "requested_quantity",
+    "reason_code",
+    "item_condition",
+    "return_method",
+]
 
 
 class ReturnClaimFacts(StateModel):
@@ -21,6 +29,8 @@ class ReturnClaimFacts(StateModel):
     requested_quantity: int | None = Field(default=None, ge=1)
     reason_code: str | None = None
     item_condition: str | None = None
+    return_method: str | None = None
+    model_derived_fields: set[ClaimField] = Field(default_factory=set)
 
 
 class ReturnDecisionRequest(StateModel):

@@ -1,0 +1,29 @@
+flowchart TD
+    START([START: one new user turn]) --> V[validate_request<br/>re-validate input schema; append transition]
+    V --> C[classify_request<br/>deterministic lexical intent + confidence]
+    C --> R{route_intent reads classification.intent}
+
+    R -->|POLICY_QUESTION| PW[policy_worker adapter]
+    R -->|ORDER_STATUS| OW[order_worker adapter]
+    R -->|RETURN_ELIGIBILITY| FAN[eligibility_fanout node]
+    R -->|SUBMIT_RETURN| SR[submit_return placeholder]
+    R -->|UNCLEAR| CL[clarify: ask user to specify intent]
+
+    PW --> FR[finalize_response]
+    OW --> FR
+    FAN --> P2[eligibility_policy_worker]
+    FAN --> O2[eligibility_order_worker: not configured]
+    P2 --> VE[validate_eligibility: not configured]
+    O2 --> VE
+    VE --> FR
+    SR --> FR
+    CL --> FR
+    FR --> E([END: response fields on shared state])
+
+    CL -. user replies in a later turn .-> NEW([API invokes graph again<br/>fresh request_id and fresh state])
+    NEW --> V
+
+    classDef ready fill:#e5f4e8,stroke:#34804b,color:#183d24
+    classDef pending fill:#fff3cd,stroke:#ba8b00,color:#493600
+    class START,V,C,R,PW,OW,CL,FR,E ready
+    class FAN,P2,O2,VE,SR pending

@@ -59,7 +59,7 @@ ORDER_NUMBER_PATTERNS = (
 
 def plan_order_query(request: OrderAgentRequest) -> OrderQueryPlan:
     normalized = _normalize(request.message)
-    order_number = _extract_order_number(request.message)
+    order_number = request.order_number or _extract_order_number(request.message)
     history = any(term in normalized for term in HISTORY_TERMS)
     latest = any(term in normalized for term in LATEST_TERMS)
     return OrderQueryPlan(

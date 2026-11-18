@@ -31,6 +31,9 @@ class RequestContext(StateModel):
     request_id: UUID = Field(default_factory=uuid4)
     conversation_id: str | None = None
     user_id: UUID | None = None
+    prior_messages: list[str] = Field(default_factory=list)
+    pending_intent: ReturnIntent | None = None
+    conversation_claim: dict[str, Any] = Field(default_factory=dict)
     received_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 

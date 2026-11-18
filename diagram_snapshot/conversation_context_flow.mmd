@@ -1,0 +1,46 @@
+flowchart TD
+    USER["Người dùng gửi lượt N<br/>message + conversation_id"] --> INVOKE["ManagerAgentGraph.invoke<br/>tạo request_id và state mới"]
+    INVOKE --> HAS_ID{"conversation_id hợp lệ?"}
+    HAS_ID -->|Không| NO_CONTEXT["Không đọc/lưu context<br/>lượt này chạy độc lập"]
+    HAS_ID -->|Có| LOCK["Khóa lượt theo<br/>user_id + conversation_id"]
+    LOCK --> GET["ConversationStore.get"]
+    GET --> EXISTS{"Snapshot còn hạn?"}
+    EXISTS -->|Không| EMPTY["prior_messages = []<br/>pending_intent = none<br/>claim = {}"]
+    EXISTS -->|Có| SNAPSHOT["Đọc snapshot<br/>user messages + pending_intent + claim"]
+
+    NO_CONTEXT --> INIT["Tạo RequestContext cho lượt N"]
+    EMPTY --> INIT
+    SNAPSHOT --> INIT
+    INIT --> GRAPH["Chạy graph cho lượt N"]
+    GRAPH --> CLASSIFY["Hiểu message hiện tại<br/>+ prior_messages + pending_intent"]
+    CLASSIFY --> ROUTE{"Intent sau phân loại"}
+
+    ROUTE -->|unclear| CLARIFY["Hỏi làm rõ intent"]
+    ROUTE -->|Policy / Order / Return| WORKER["Chạy worker tương ứng<br/>worker nhận transcript khi cần"]
+    WORKER --> NEEDS{"Kết quả yêu cầu thêm<br/>thông tin từ người dùng?"}
+    NEEDS -->|Có| CLARIFY_RESULT["Ví dụ: policy không tìm thấy,<br/>đơn cần làm rõ, thiếu claim đổi trả"]
+    NEEDS -->|Không| COMPLETE["Trả lời xong lượt hiện tại"]
+    CLARIFY_RESULT --> PENDING["clarification.awaiting_user = true"]
+    CLARIFY --> PENDING
+
+    PENDING --> HAS_ID2{"Có conversation_id?"}
+    HAS_ID2 -->|Không| RESPONSE1["Trả câu hỏi làm rõ<br/>không giữ context cho lượt sau"]
+    HAS_ID2 -->|Có| BUILD["Tạo snapshot mới:<br/>các user messages trước + message lượt N<br/>intent hiện tại (hoặc intent cũ nếu unclear)<br/>claim hiện tại (hoặc claim cũ)"]
+    BUILD --> LIMIT["Giữ tối đa 8 tin nhắn<br/>mỗi tin tối đa 2.000 ký tự"]
+    LIMIT --> SAVE["ConversationStore.save<br/>refresh TTL 30 phút"]
+    SAVE --> RESPONSE2["Trả câu hỏi làm rõ"]
+
+    COMPLETE --> DELETE["Nếu có conversation_id:<br/>ConversationStore.delete"]
+    DELETE --> RESPONSE3["Trả kết quả lượt N"]
+
+    RESPONSE1 --> NEXT["Người dùng có thể gửi lượt N+1"]
+    RESPONSE2 --> NEXT
+    RESPONSE3 --> NEXT
+    NEXT -. "Dùng cùng user_id + conversation_id<br/>để nối tiếp nếu snapshot còn hạn" .-> INVOKE
+
+    classDef active fill:#e5f4e8,stroke:#34804b,color:#183d24
+    classDef choice fill:#fff3cd,stroke:#ba8b00,color:#493600
+    classDef storage fill:#e7f0ff,stroke:#4d75a5,color:#20334d
+    class HAS_ID,EXISTS,ROUTE,NEEDS,HAS_ID2 choice
+    class LOCK,GET,SNAPSHOT,EMPTY,BUILD,LIMIT,SAVE,DELETE storage
+    class USER,INVOKE,NO_CONTEXT,INIT,GRAPH,CLASSIFY,CLARIFY,WORKER,CLARIFY_RESULT,PENDING,RESPONSE1,RESPONSE2,RESPONSE3,COMPLETE,NEXT active

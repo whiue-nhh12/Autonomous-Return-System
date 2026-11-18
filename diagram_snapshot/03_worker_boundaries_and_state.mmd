@@ -1,0 +1,44 @@
+flowchart LR
+    subgraph M[Manager graph: owns orchestration state]
+        MS[AgentSharedState<br/>request + user context + intent + response + transitions]
+        ROUTER[route_intent]
+        FAN[send_eligibility_workers]
+        COLLECT[LangGraph collects node updates<br/>child_results reducer merges distinct keys]
+        FINAL[finalize_response<br/>manager writes worker result into canonical response state]
+    end
+
+    subgraph P[Policy child graph: policy-local state]
+        PCOPY[PolicyAgentRequest<br/>message, language, request_id]
+        PG[retrieve_policy → answer_with_evidence<br/>or no_evidence]
+        PRES[PolicyAgentResult<br/>lookup_status, message, evidence, error]
+    end
+
+    subgraph O[Order child graph: order-local state]
+        OCOPY[OrderAgentRequest<br/>user_id, request_id, message, language]
+        OG[interpret_request → retrieve_orders<br/>→ normalize_result / lookup_failed]
+        ORES[OrderAgentResult<br/>status, normalized orders, has_more, message]
+    end
+
+    MS --> ROUTER
+    ROUTER -->|single policy request| PCOPY
+    ROUTER -->|single order request| OCOPY
+    ROUTER -->|eligibility: deep copy A| PCOPY
+    ROUTER -->|eligibility: deep copy B| ELORDER[Eligibility order placeholder]
+
+    PCOPY --> PG --> PRES
+    OCOPY --> OG --> ORES
+    PRES -->|adapter converts to ChildAgentResult| COLLECT
+    ORES -->|adapter converts to ChildAgentResult| COLLECT
+    ELORDER --> COLLECT
+    COLLECT --> FINAL --> MS
+
+    NOTE[Workers return typed results.<br/>They do not receive the manager's whole graph state<br/>and do not decide the final workflow response.]
+    NOTE -. boundary .-> PG
+    NOTE -. boundary .-> OG
+
+    classDef manager fill:#e7f0ff,stroke:#4d75a5,color:#20334d
+    classDef worker fill:#eee8ff,stroke:#7656a6,color:#30214b
+    classDef pending fill:#fff3cd,stroke:#ba8b00,color:#493600
+    class MS,ROUTER,FAN,COLLECT,FINAL manager
+    class PCOPY,PG,PRES,OCOPY,OG,ORES worker
+    class ELORDER pending

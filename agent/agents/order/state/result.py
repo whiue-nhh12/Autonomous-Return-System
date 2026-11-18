@@ -13,6 +13,7 @@ class OrderAgentRequest(StateModel):
     request_id: UUID
     message: str = Field(min_length=1)
     language: str = "vi"
+    order_number: str | None = Field(default=None, min_length=1, max_length=64)
 
 
 class OrderQueryPlan(StateModel):

@@ -61,6 +61,10 @@ def finalize_response(state: ManagerGraphState) -> dict[str, AgentSharedState]:
                     "failed" if child_result.lookup_status == "failed" else "ready"
                 )
                 shared.response.message = child_result.message
+                if child_result.lookup_status == "not_found":
+                    shared.clarification.needed = True
+                    shared.clarification.awaiting_user = True
+                    shared.clarification.question = child_result.message
             else:
                 shared.response.status = "ready"
                 shared.response.message = results["policy"].message
@@ -147,8 +151,57 @@ def finalize_response(state: ManagerGraphState) -> dict[str, AgentSharedState]:
                     shared.clarification.question = decision.message
                     shared.clarification.missing_fields = decision.missing_fields
         elif intent is ReturnIntent.SUBMIT_RETURN:
-            shared.response.status = "ready"
-            shared.response.message = results["submit_return"].message
+            submitted = results.get("submit_return")
+            proposal_result = results.get("return_proposal")
+            if state.get("return_request_id") is not None:
+                shared.persistence.status = "committed"
+                shared.persistence.return_request_id = state["return_request_id"]
+            if proposal_result is not None:
+                decision = state.get("eligibility_decision_state")
+                if decision is not None:
+                    shared.decision_proposal = DecisionProposalState(
+                        status=decision.status,
+                        outcome=decision.outcome,
+                        reason=decision.message,
+                        evidence_refs=decision.evidence_refs,
+                        reason_codes=decision.reason_codes,
+                        rule_set_version=decision.rule_set_version,
+                        evaluated_at=decision.evaluated_at,
+                    )
+                    shared.business_validation = BusinessValidationState(
+                        status=(
+                            "valid" if decision.outcome == "approve"
+                            else "invalid" if decision.outcome == "reject"
+                            else "needs_review" if decision.outcome == "manual_review"
+                            else "not_started"
+                        ),
+                        checks={check.code: check.status for check in decision.checks},
+                        reasons=decision.reason_codes,
+                    )
+                shared.response.status = (
+                    "failed" if proposal_result.status == "failed" else "ready"
+                )
+                shared.response.message = proposal_result.message
+                if decision is not None and decision.status == "needs_clarification":
+                    shared.clarification.needed = True
+                    shared.clarification.awaiting_user = True
+                    shared.clarification.question = decision.message
+                    shared.clarification.missing_fields = decision.missing_fields
+            elif submitted is not None:
+                shared.response.status = (
+                    "failed" if submitted.status == "failed" else "ready"
+                )
+                shared.response.message = submitted.message
+                if submitted.status == "needs_clarification":
+                    shared.clarification.needed = True
+                    shared.clarification.awaiting_user = True
+                    shared.clarification.question = submitted.message
+                    shared.clarification.missing_fields = submitted.data.get(
+                        "missing_fields", []
+                    )
+            else:
+                shared.response.status = "failed"
+                shared.response.message = "The return request could not be submitted."
     else:
         shared.orchestration.status = "completed"
 

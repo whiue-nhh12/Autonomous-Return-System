@@ -36,6 +36,9 @@ class ReturnRequest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "return_requests"
 
     return_number: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    # The manager request ID makes graph retries idempotent at the submission boundary.
+    submission_request_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True, unique=True)
+    submission_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
     order_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("orders.id", ondelete="RESTRICT"),
         nullable=False,
@@ -93,6 +96,9 @@ class ReturnRequest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     items: Mapped[list["ReturnItem"]] = relationship(back_populates="return_request")
     status_history: Mapped[list["ReturnStatusHistory"]] = relationship(back_populates="return_request")
+    decision_proposals: Mapped[list["ReturnDecisionProposal"]] = relationship(
+        back_populates="return_request"
+    )
     refunds: Mapped[list["Refund"]] = relationship(back_populates="return_request")
     shipments: Mapped[list["Shipment"]] = relationship(back_populates="return_request")
 
@@ -156,6 +162,7 @@ class ReturnStatusHistory(UUIDPrimaryKeyMixin, Base):
         nullable=True,
     )
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(128), nullable=True, unique=True)
     source: Mapped[StatusChangeSource] = mapped_column(
         enum_column(StatusChangeSource, "return_status_change_source"),
         nullable=False,
@@ -170,11 +177,70 @@ class ReturnStatusHistory(UUIDPrimaryKeyMixin, Base):
     changed_by: Mapped["User | None"] = relationship(foreign_keys=[changed_by_user_id])
 
 
+class ReturnDecisionProposal(UUIDPrimaryKeyMixin, Base):
+    """Immutable Decision Agent assessment and its optional admin decision."""
+
+    __tablename__ = "return_decision_proposals"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('completed', 'needs_clarification', 'failed')",
+            name="ck_return_decision_proposals_status",
+        ),
+        CheckConstraint(
+            "outcome IS NULL OR outcome IN ('approve', 'reject', 'manual_review')",
+            name="ck_return_decision_proposals_outcome",
+        ),
+        CheckConstraint(
+            "decision_action IS NULL OR decision_action IN ('approve', 'reject')",
+            name="ck_return_decision_proposals_decision_action",
+        ),
+        UniqueConstraint("evaluation_request_id", name="uq_return_proposals_evaluation_request"),
+        UniqueConstraint("decision_idempotency_key", name="uq_return_proposals_idempotency_key"),
+        Index("ix_return_proposals_request_evaluated", "return_request_id", "evaluated_at"),
+    )
+
+    return_request_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("return_requests.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    evaluation_request_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    outcome: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    assessment_message: Mapped[str] = mapped_column(Text, nullable=False)
+    checks: Mapped[list[dict]] = mapped_column(JSON, nullable=False, default=list)
+    reason_codes: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    missing_fields: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    evidence_refs: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    policy_versions: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    policy_version_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    claim_facts: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    evaluated_order_facts: Mapped[list[dict]] = mapped_column(JSON, nullable=False, default=list)
+    evaluated_data_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    rule_set_version: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    classifier_version: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    decision_engine_version: Mapped[str] = mapped_column(
+        String(64), nullable=False, default="return-decision-v1", server_default="return-decision-v1"
+    )
+    evaluated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    decision_action: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    decision_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    decision_idempotency_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    decided_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    return_request: Mapped[ReturnRequest] = relationship(back_populates="decision_proposals")
+    decision_maker: Mapped["User | None"] = relationship(foreign_keys=[decided_by])
+
+
 class Refund(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "refunds"
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_refunds_amount_positive"),
         Index("ix_refunds_return_status", "return_request_id", "status"),
+        UniqueConstraint("idempotency_key", name="uq_refunds_idempotency_key"),
     )
 
     return_request_id: Mapped[uuid.UUID] = mapped_column(
@@ -188,6 +254,8 @@ class Refund(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         index=True,
     )
     provider_refund_id: Mapped[str | None] = mapped_column(String(255), nullable=True, unique=True)
+    # Nullable for legacy/manual refunds; new refund commands always provide a key.
+    idempotency_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="VND", server_default="VND")
     status: Mapped[RefundStatus] = mapped_column(

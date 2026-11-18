@@ -1,0 +1,41 @@
+flowchart TD
+    A["Authenticated request<br/>user_id + message"] --> B["ManagerAgentGraph.invoke"]
+    B --> S0["Shared state S0<br/>context + input"]
+
+    S0 --> C["validate_request"]
+    C --> S1["Shared state S1<br/>validated input + transition"]
+    S1 --> D["classify_request"]
+    D --> S2["Shared state S2<br/>classification + transition"]
+    S2 --> R{"route_intent"}
+
+    R -->|"policy question"| P["PolicyAgentGraph"]
+    R -->|"order status"| O["Order worker<br/>placeholder"]
+    R -->|"return eligibility"| E["Eligibility fan-out"]
+    R -->|"submit return"| U["Submit-return worker<br/>placeholder"]
+    R -->|"unclear"| CL["clarify"]
+
+    subgraph CHILD["Policy child-local state"]
+        P --> PR["PolicyAgentRequest"]
+        PR --> PL["Local retrieval state"]
+        PL --> PO["PolicyAgentResult<br/>status + evidence + message"]
+    end
+
+    PO --> PA["Orchestration adapter"]
+    PA --> CR["Manager graph state<br/>policy_worker_state + child_results"]
+
+    E --> EP["Policy worker"]
+    E --> EO["Order lookup<br/>placeholder"]
+    EP --> EV["Eligibility evaluator<br/>placeholder"]
+    EO --> EV
+
+    O --> FIN["finalize_response"]
+    CR --> FIN
+    EV --> FIN
+    U --> FIN
+    CL --> FIN
+
+    C -. "updates shared input and transitions" .-> S1
+    D -. "updates classification and transitions" .-> S2
+    CL -. "updates clarification and response" .-> S3
+    FIN --> S3["Shared state S3<br/>child results + response + transitions<br/>policy evidence when applicable"]
+    S3 --> OUT["Return AgentSharedState"]

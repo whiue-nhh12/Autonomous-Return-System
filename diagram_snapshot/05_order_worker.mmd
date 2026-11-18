@@ -1,0 +1,23 @@
+flowchart TD
+    IN[Manager order_worker adapter] -->|OrderAgentRequest includes authenticated user_id| START([OrderAgentGraph.invoke])
+    START --> PLAN[interpret_request<br/>detect order number, latest, history, ambiguity]
+    PLAN --> READ[retrieve_orders<br/>call OrderQueryService.search_history]
+    READ --> SVC[OrderQueryService<br/>open dedicated read-only DB session]
+    SVC --> REPO[OrderReadRepository.search_history]
+    REPO --> DB[(Database<br/>filter Order.user_id == authenticated user_id<br/>load related order/return records)]
+    DB --> PAGE[OrderReadPage<br/>bounded bundles + has_more]
+    PAGE --> OK{lookup raised error?}
+    OK -->|no| NORMALIZE[normalize_result<br/>ORM rows → typed OrderLookupData]
+    OK -->|yes| FAIL[lookup_failed<br/>safe failure result]
+    NORMALIZE --> RESULT[OrderAgentResult<br/>status, orders, has_more, message]
+    FAIL --> RESULT
+    RESULT --> ADAPTER[Manager adapter converts to ChildAgentResult]
+    ADAPTER --> FINAL[finalize_response<br/>copies order data into shared.order_lookup]
+    FINAL --> OUT([Manager response])
+
+    classDef manager fill:#e7f0ff,stroke:#4d75a5,color:#20334d
+    classDef worker fill:#eee8ff,stroke:#7656a6,color:#30214b
+    classDef storage fill:#e5f4e8,stroke:#34804b,color:#183d24
+    class IN,ADAPTER,FINAL,OUT manager
+    class START,PLAN,READ,PAGE,OK,NORMALIZE,FAIL,RESULT worker
+    class SVC,REPO,DB storage

@@ -1,0 +1,38 @@
+flowchart TD
+    U[User] -->|Bearer token + message| API[POST /agent/requests]
+    API --> AUTH[get_current_user]
+    AUTH -->|Verify token and resolve active user| PRINCIPAL[AuthenticatedPrincipal]
+    PRINCIPAL -->|user_id| ENTRY[ManagerAgentGraph.invoke]
+    API -->|message, language, conversation_id| ENTRY
+
+    ENTRY --> INIT[Create fresh AgentSharedState and request_id]
+    INIT --> VALIDATE[validate_request]
+    VALIDATE --> CLASSIFY[classify_request]
+    CLASSIFY --> ROUTE{route_intent}
+
+    ROUTE -->|policy_question| POLICY[policy_worker adapter]
+    ROUTE -->|order_status| ORDER[order_worker adapter]
+    ROUTE -->|return_eligibility| FANOUT[eligibility_fanout]
+    ROUTE -->|submit_return| SUBMIT[submit_return placeholder]
+    ROUTE -->|unclear| CLARIFY[clarify]
+
+    FANOUT -->|Send 1| EP[eligibility_policy_worker]
+    FANOUT -->|Send 2| EO[eligibility_order_worker placeholder]
+    EP --> JOIN[validate_eligibility placeholder]
+    EO --> JOIN
+
+    POLICY --> FINAL[finalize_response]
+    ORDER --> FINAL
+    JOIN --> FINAL
+    SUBMIT --> FINAL
+    CLARIFY --> FINAL
+    FINAL --> END[END: AgentSharedState]
+    END --> RESPONSE[ManagerResponse.from_state]
+    RESPONSE -->|HTTP response| U
+
+    classDef implemented fill:#e5f4e8,stroke:#34804b,color:#183d24
+    classDef partial fill:#fff3cd,stroke:#ba8b00,color:#493600
+    classDef user fill:#e7f0ff,stroke:#4d75a5,color:#20334d
+    class API,AUTH,PRINCIPAL,ENTRY,INIT,VALIDATE,CLASSIFY,ROUTE,POLICY,ORDER,CLARIFY,FINAL,END,RESPONSE implemented
+    class FANOUT,EP,EO,JOIN,SUBMIT partial
+    class U user

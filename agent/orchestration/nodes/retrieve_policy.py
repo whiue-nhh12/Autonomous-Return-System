@@ -28,9 +28,10 @@ def create_policy_node(
             return {"child_results": {result_key: result}}
 
         try:
+            message = "\n".join([*shared.context.prior_messages, shared.input.message])
             child_result = policy_agent.invoke(
                 PolicyAgentRequest(
-                    message=shared.input.message,
+                    message=message,
                     language=shared.input.language,
                     request_id=str(shared.context.request_id),
                 )

@@ -1,0 +1,16 @@
+flowchart TD
+    IN[Manager policy_worker adapter] -->|build PolicyAgentRequest| START([PolicyAgentGraph.invoke])
+    START --> R[retrieve_policy node<br/>PolicyAgent calls injected search pipeline]
+    R --> Q{retrieval status == completed?}
+    Q -->|yes| A[answer_with_evidence<br/>format answer from selected evidence + citations]
+    Q -->|no_evidence or failed| N[no_evidence<br/>distinguish not_found from failed]
+    A --> RESULT[PolicyAgentResult<br/>status, message, evidence]
+    N --> RESULT
+    RESULT --> ADAPTER[Manager adapter converts to ChildAgentResult<br/>and stores policy worker result]
+    ADAPTER --> FINAL[Manager finalize_response<br/>sets policy_lookup + user-facing response]
+    FINAL --> OUT([ManagerAgentGraph returns shared state])
+
+    classDef work fill:#eee8ff,stroke:#7656a6,color:#30214b
+    classDef manager fill:#e7f0ff,stroke:#4d75a5,color:#20334d
+    class IN,ADAPTER,FINAL,OUT manager
+    class START,R,Q,A,N,RESULT work

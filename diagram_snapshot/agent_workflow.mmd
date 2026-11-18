@@ -1,54 +1,56 @@
 flowchart TD
-    A["Người dùng gửi request"] --> B["Validate request<br/>Schema, payload, phiên đăng nhập"]
-    B --> C{"Request hợp lệ?"}
+    USER["Người dùng gửi một lượt mới<br/>message + conversation_id"] --> INVOKE["ManagerAgentGraph.invoke<br/>request_id mới, state mới"]
+    INVOKE --> STORE{"Có conversation_id?"}
+    STORE -->|Có| LOAD["Lấy context đang chờ làm rõ<br/>theo user_id + conversation_id<br/>khóa lượt xử lý cùng hội thoại"]
+    STORE -->|Không| EMPTY["Context hội thoại rỗng"]
+    LOAD --> INIT["Tạo AgentSharedState<br/>prior_messages + pending_intent + claim"]
+    EMPTY --> INIT
 
-    C -- "Không" --> D["Trả lỗi validation phù hợp"]
-    C -- "Có" --> E["Classifier<br/>Phân loại intent và trích xuất thông tin"]
+    INIT --> VALIDATE["validate_request<br/>kiểm tra và chuẩn hóa input"]
+    VALIDATE --> CLASSIFY["classify_intent + trích xuất return claim"]
+    CLASSIFY --> RULES["1. Luật từ khóa xác định intent rõ"]
+    RULES --> CLEAR{"Intent đã rõ?"}
+    CLEAR -->|Rồi| EXTRACT["Nếu là order/return intent:<br/>trích xuất claim bằng luật<br/>có thể dùng LLM bổ sung trường còn thiếu"]
+    CLEAR -->|Chưa| REPLY{"Có phải câu trả lời ngắn<br/>cho câu hỏi làm rõ trước đó?"}
+    REPLY -->|Có| CONTINUE["Dùng intent đang chờ<br/>hoặc intent từ lựa chọn rõ ràng"]
+    REPLY -->|Không| LLM{"Đã cấu hình LLM?"}
+    LLM -->|Có| PREDICT["LLM trả JSON có cấu trúc"]
+    PREDICT --> CONF{"JSON hợp lệ<br/>và confidence đạt ngưỡng?"}
+    CONF -->|Có| EXTRACT
+    CONF -->|Không| UNCLEAR["intent = unclear"]
+    LLM -->|Không| UNCLEAR
+    CONTINUE --> EXTRACT
 
-    E --> F{"Intent"}
-    F -- "unclear / confidence thấp" --> G["Hỏi người dùng làm rõ"]
-    G --> A
+    EXTRACT --> ROUTE{"route_intent"}
+    UNCLEAR --> CLARIFY["Hỏi người dùng làm rõ intent"]
 
-    F -- "policy_question" --> H["Validate input theo intent"]
-    F -- "order_status" --> H
-    F -- "return_eligibility" --> H
-    F -- "submit_return" --> H
+    ROUTE -->|policy_question| POLICY["Policy worker<br/>tìm bằng chứng chính sách"]
+    ROUTE -->|order_status| ORDER["Order worker<br/>tra cứu đơn theo user_id"]
+    ROUTE -->|return_eligibility| FANOUT["Chạy song song hai worker"]
+    ROUTE -->|submit_return| SUBMIT["Submit-return placeholder<br/>hiện trả not_configured"]
 
-    H --> I{"Đủ thông tin bắt buộc?"}
-    I -- "Không" --> J["Yêu cầu bổ sung thông tin còn thiếu"]
-    J --> A
-    I -- "Có" --> K{"Intent"}
+    FANOUT --> EP["Policy worker<br/>bằng chứng chính sách"]
+    FANOUT --> EO["Order worker<br/>đơn hàng và sản phẩm"]
+    EP --> DECIDE["Return decision worker<br/>kết hợp claim + đơn + policy<br/>claim do LLM bổ sung → manual_review<br/>thiếu rule/evidence → manual_review"]
+    EO --> DECIDE
 
-    K -- "policy_question" --> L["Agent tra cứu tài liệu chính sách"]
-    L --> M["Trả lời kèm nguồn chính sách"]
+    POLICY --> FINAL["finalize_response<br/>gom kết quả, trạng thái, câu trả lời"]
+    ORDER --> FINAL
+    SUBMIT --> FINAL
+    DECIDE --> FINAL
+    CLARIFY --> FINAL
 
-    K -- "order_status" --> N["Xác thực quyền xem đơn"]
-    N --> O["Agent tra cứu dữ liệu đơn hàng"]
-    O --> P["Trả lời thông tin đơn"]
+    FINAL --> WAIT{"clarification.awaiting_user?"}
+    WAIT -->|Có, có conversation_id| SAVE["Lưu tối đa 8 tin nhắn + intent + claim<br/>TTL 30 phút, scope theo user + conversation"]
+    WAIT -->|Không, hoặc không có conversation_id| DELETE["Xóa context hội thoại đã lưu<br/>nếu có conversation_id"]
+    SAVE --> RESPONSE["Trả AgentSharedState / ManagerResponse"]
+    DELETE --> RESPONSE
+    RESPONSE --> NEXT["Lượt sau dùng cùng conversation_id<br/>để tiếp tục nếu đang chờ làm rõ"]
+    NEXT -. "request mới, request_id mới" .-> INVOKE
 
-    K -- "return_eligibility" --> Q["ThreadPoolExecutor<br/>Chạy song song"]
-    K -- "submit_return" --> Q
-
-    Q --> R["Agent tra cứu dữ liệu<br/>Session DB riêng trong worker"]
-    Q --> S["Agent tra cứu tài liệu chính sách"]
-    R --> T["Chờ và tổng hợp cả hai kết quả"]
-    S --> T
-
-    T --> U{"Cả hai nhánh tra cứu thành công?"}
-    U -- "Không" --> V["Báo lỗi tra cứu hoặc thử lại<br/>Không đưa ra kết luận thiếu căn cứ"]
-    U -- "Có" --> W["Validate nghiệp vụ<br/>Quyền sở hữu đơn, trạng thái, số lượng trả"]
-
-    W --> X{"Intent"}
-    X -- "return_eligibility" --> Y["Agent quyết định / đánh giá"]
-    Y --> Z["Trả lời điều kiện và căn cứ"]
-
-    X -- "submit_return" --> AA["Agent quyết định / đề xuất"]
-    AA --> AB["Backend/service kiểm tra lại đề xuất"]
-    AB --> AC{"Được phép ghi?"}
-    AC -- "Không" --> AD["Trả lý do hoặc yêu cầu bổ sung"]
-    AC -- "Có" --> AE["Ghi ReturnRequest, ReturnItem,<br/>ReturnStatusHistory trong transaction"]
-
-    AE --> AF{"Commit thành công?"}
-    AF -- "Không" --> AG["Báo lỗi xử lý<br/>Không gửi email"]
-    AF -- "Có" --> AH["Agent gửi email thông báo"]
-    AH --> AI["Trả kết quả cho người dùng"]
+    classDef active fill:#e5f4e8,stroke:#34804b,color:#183d24
+    classDef conditional fill:#fff3cd,stroke:#ba8b00,color:#493600
+    classDef placeholder fill:#f8d7da,stroke:#a94442,color:#542323
+    class USER,INVOKE,LOAD,EMPTY,INIT,VALIDATE,CLASSIFY,RULES,EXTRACT,CONTINUE,UNCLEAR,POLICY,ORDER,FANOUT,EP,EO,DECIDE,FINAL,CLARIFY,SAVE,DELETE,RESPONSE,NEXT active
+    class STORE,CLEAR,REPLY,LLM,CONF,ROUTE,WAIT conditional
+    class SUBMIT placeholder

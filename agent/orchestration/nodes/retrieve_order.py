@@ -25,12 +25,15 @@ def create_order_node(order_agent: OrderAgentGraph | None):
             return {"child_results": {"order": child_result}}
 
         try:
+            message = "\n".join([*shared.context.prior_messages, shared.input.message])
+            order_number = shared.classification.entities.get("order_number")
             result = order_agent.invoke(
                 OrderAgentRequest(
                     user_id=shared.context.user_id,
                     request_id=shared.context.request_id,
-                    message=shared.input.message,
+                    message=message,
                     language=shared.input.language,
+                    order_number=order_number if isinstance(order_number, str) else None,
                 )
             )
         except Exception:
@@ -75,12 +78,15 @@ def create_eligibility_order_node(order_agent: OrderAgentGraph | None):
                 error_code="ELIGIBILITY_ORDER_AGENT_NOT_CONFIGURED",
             )}}
         try:
+            message = "\n".join([*shared.context.prior_messages, shared.input.message])
+            order_number = shared.classification.entities.get("order_number")
             result = order_agent.invoke(
                 OrderAgentRequest(
                     user_id=shared.context.user_id,
                     request_id=shared.context.request_id,
-                    message=shared.input.message,
+                    message=message,
                     language=shared.input.language,
+                    order_number=order_number if isinstance(order_number, str) else None,
                 )
             )
         except Exception:
